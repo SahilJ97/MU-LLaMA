@@ -5,6 +5,8 @@ import llama
 from util.misc import *
 from data.utils import load_and_transform_audio_data
 
+torch.cuda.set_per_process_memory_fraction(0.98)
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--model", default="./ckpts/checkpoint.pth", type=str,
@@ -38,6 +40,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 model = llama.load(args.model, args.llama_dir, mert_path=args.mert_path, knn=True, knn_dir=args.knn_dir, llama_type=args.llama_type)
+model = model.half()
 model.eval()
 
 def multimodal_generate(
@@ -53,8 +56,6 @@ def multimodal_generate(
     inputs = {}
     audio = load_and_transform_audio_data([audio_path])
     inputs['Audio'] = [audio, audio_weight]
-    image_prompt = prompt
-    text_output = None
     prompts = [llama.format_prompt(prompt)]
     prompts = [model.tokenizer.encode(x, bos=True, eos=False) for x in prompts]
     with torch.cuda.amp.autocast():
