@@ -195,7 +195,7 @@ class LLaMA_adapter(nn.Module):
                                               sampling_rate=self.mert_processor.sampling_rate,
                                               return_tensors="pt").to(self.device) for ix in
                           range(0, len(sub_x) // (self.mert_processor.sampling_rate * 60) + 1, 60)]
-            print("MERT input shapes:", [t.shape for t in all_inputs])
+            print("MERT inputs:", [t for t in all_inputs])
             aggoutputs = torch.zeros(1, 25, 1024).to(self.device)
             for inputs in all_inputs:
                 with torch.no_grad():
