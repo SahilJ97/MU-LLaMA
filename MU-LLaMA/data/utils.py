@@ -21,7 +21,8 @@ def load_and_transform_audio_data(
 ):
     audios = []
     for path in audio_paths:
-        waveform, sr = torchaudio.load(path)
+        format = path.split(".")[-1]
+        waveform, sr = torchaudio.load(path, format=format)
         if sample_rate != sr:
             waveform = torchaudio.functional.resample(waveform, orig_freq=sr, new_freq=sample_rate)
         waveform = torch.mean(waveform, 0)
