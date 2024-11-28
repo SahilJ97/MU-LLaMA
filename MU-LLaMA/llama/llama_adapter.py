@@ -70,7 +70,7 @@ class LLaMA_adapter(nn.Module):
         #    **params)  # max_batch_size only affects inference
         # reducing max_seq_len; hopefully this is okay for the audio
         model_args: ModelArgs = ModelArgs(
-                max_seq_len=1024, max_batch_size=1, w_bias=bias_lora, w_lora=bias_lora,
+                max_seq_len=512, max_batch_size=1, w_bias=bias_lora, w_lora=bias_lora,
                 **params)  # max_batch_size only affects inference
         print(f"model args: {model_args}")
         model_args.vocab_size = self.tokenizer.n_words
