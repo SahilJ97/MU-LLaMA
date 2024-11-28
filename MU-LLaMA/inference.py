@@ -1,10 +1,11 @@
 import argparse
 import torch.cuda
-
+import os
 import llama
 from util.misc import *
 from data.utils import load_and_transform_audio_data
 
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:32'
 #torch.cuda.set_per_process_memory_fraction(0.98)
 
 parser = argparse.ArgumentParser()
