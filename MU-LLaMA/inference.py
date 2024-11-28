@@ -5,7 +5,7 @@ import llama
 from util.misc import *
 from data.utils import load_and_transform_audio_data
 
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:21,garbage_collection_threshold:0.6,memory_efficient:True'
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:16,garbage_collection_threshold:0.6'
 #torch.cuda.set_per_process_memory_fraction(0.98)
 
 parser = argparse.ArgumentParser()
@@ -64,8 +64,10 @@ def multimodal_generate(
     inputs['Audio'] = [audio, audio_weight]
     prompts = [llama.format_prompt(prompt)]
     prompts = [model.tokenizer.encode(x, bos=True, eos=False) for x in prompts]
-    print("Beginning inference...")
+    torch.cuda.reset_peak_memory_stats()
+    print("Memory before inference:", torch.cuda.memory_allocated() / 1e9, "GB")
     with torch.cuda.amp.autocast():
+        print("Memory before autocast:", torch.cuda.memory_allocated() / 1e9, "GB")
         results = model.generate(inputs, prompts, max_gen_len=max_gen_len, temperature=gen_t, top_p=top_p,
                                      cache_size=cache_size, cache_t=cache_t, cache_weight=cache_weight)
     print("Inference complete.")
