@@ -5,7 +5,7 @@ import llama
 from util.misc import *
 from data.utils import load_and_transform_audio_data
 
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:16,garbage_collection_threshold:0.6,memory_efficient:True'
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:21,garbage_collection_threshold:0.6,memory_efficient:True'
 #torch.cuda.set_per_process_memory_fraction(0.98)
 
 parser = argparse.ArgumentParser()
