@@ -5,7 +5,7 @@ import llama
 from util.misc import *
 from data.utils import load_and_transform_audio_data
 
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:16,garbage_collection_threshold:0.6'
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:21,garbage_collection_threshold:0.6'
 #torch.cuda.set_per_process_memory_fraction(0.98)
 
 parser = argparse.ArgumentParser()
@@ -43,10 +43,15 @@ args = parser.parse_args()
 
 print("Value of PYTORCH_CUDA_ALLOC_CONF is", os.getenv('PYTORCH_CUDA_ALLOC_CONF'))
 
+
+print("Memory before load:", torch.cuda.memory_allocated()/1e9, "GB")
+model = llama.load(args.model, args.llama_dir, mert_path=args.mert_path, knn=True, knn_dir=args.knn_dir, llama_type=args.llama_type)
+print("Memory after load:", torch.cuda.memory_allocated()/1e9, "GB")
 with torch.cuda.amp.autocast():
-    model = llama.load(args.model, args.llama_dir, mert_path=args.mert_path, knn=True, knn_dir=args.knn_dir, llama_type=args.llama_type)
     model = model.to(torch.bfloat16)
+    print("Memory after bfloat16:", torch.cuda.memory_allocated()/1e9, "GB")
     model.eval()
+    print("Memory after eval:", torch.cuda.memory_allocated()/1e9, "GB")
 torch.cuda.empty_cache()
 
 def multimodal_generate(
