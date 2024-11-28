@@ -5,7 +5,7 @@ import llama
 from util.misc import *
 from data.utils import load_and_transform_audio_data
 
-torch.cuda.set_per_process_memory_fraction(0.98)
+#torch.cuda.set_per_process_memory_fraction(0.98)
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -39,9 +39,12 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-model = llama.load(args.model, args.llama_dir, mert_path=args.mert_path, knn=True, knn_dir=args.knn_dir, llama_type=args.llama_type)
-model = model.half()
-model.eval()
+
+with torch.cuda.amp.autocast():
+    model = llama.load(args.model, args.llama_dir, mert_path=args.mert_path, knn=True, knn_dir=args.knn_dir, llama_type=args.llama_type)
+    model = model.to(torch.bfloat16)
+    model.eval()
+torch.cuda.empty_cache()
 
 def multimodal_generate(
         audio_path,
@@ -58,15 +61,17 @@ def multimodal_generate(
     inputs['Audio'] = [audio, audio_weight]
     prompts = [llama.format_prompt(prompt)]
     prompts = [model.tokenizer.encode(x, bos=True, eos=False) for x in prompts]
+    print("Beginning inference...")
     with torch.cuda.amp.autocast():
         results = model.generate(inputs, prompts, max_gen_len=max_gen_len, temperature=gen_t, top_p=top_p,
                                      cache_size=cache_size, cache_t=cache_t, cache_weight=cache_weight)
+    print("Inference complete.")
     text_output = results[0].strip()
     return text_output
 
-output = multimodal_generate(args.audio_path, 1, args.question, 100, 20.0, 0.0, 512, 0.6, 0.8)
+#output = multimodal_generate(args.audio_path, 1, args.question, 100, 20.0, 0.0, 512, 0.6, 0.8)
+output = multimodal_generate(args.audio_path, 1, args.question, 100, 20.0, 0.0, 256, 0.6, 0.8)
 print()
 print(f"Audio File: {args.audio_path}")
 print(f"Q: {args.question}")
 print(f"A: {output}")
-
