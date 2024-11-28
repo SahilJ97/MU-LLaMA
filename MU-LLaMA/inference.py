@@ -5,7 +5,7 @@ import llama
 from util.misc import *
 from data.utils import load_and_transform_audio_data
 
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:32'
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:16,garbage_collection_threshold:0.6,memory_efficient:True'
 #torch.cuda.set_per_process_memory_fraction(0.98)
 
 parser = argparse.ArgumentParser()
@@ -40,6 +40,8 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+
+print("Value of PYTORCH_CUDA_ALLOC_CONF is", os.getenv('PYTORCH_CUDA_ALLOC_CONF'))
 
 with torch.cuda.amp.autocast():
     model = llama.load(args.model, args.llama_dir, mert_path=args.mert_path, knn=True, knn_dir=args.knn_dir, llama_type=args.llama_type)
