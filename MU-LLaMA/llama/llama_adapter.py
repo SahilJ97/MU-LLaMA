@@ -65,9 +65,13 @@ class LLaMA_adapter(nn.Module):
         with open(os.path.join(llama_ckpt_dir, "params.json"), "r") as f:
             params = json.loads(f.read())
         bias_lora = phase == "finetune"
+        #model_args: ModelArgs = ModelArgs(
+        #    max_seq_len=8192, max_batch_size=1, w_bias=bias_lora, w_lora=bias_lora,
+        #    **params)  # max_batch_size only affects inference
+        # reducing max_seq_len to 2048; hopefully this is okay for the audio
         model_args: ModelArgs = ModelArgs(
-            max_seq_len=8192, max_batch_size=1, w_bias=bias_lora, w_lora=bias_lora,
-            **params)  # max_batch_size only affects inference
+                max_seq_len=2048, max_batch_size=1, w_bias=bias_lora, w_lora=bias_lora,
+                **params)  # max_batch_size only affects inference
         print(f"model args: {model_args}")
         model_args.vocab_size = self.tokenizer.n_words
         if torch.cuda.is_available():
@@ -191,6 +195,7 @@ class LLaMA_adapter(nn.Module):
                                               sampling_rate=self.mert_processor.sampling_rate,
                                               return_tensors="pt").to(self.device) for ix in
                           range(0, len(sub_x) // (self.mert_processor.sampling_rate * 60) + 1, 60)]
+            print("MERT input shapes:", [t.shape for t in all_inputs])
             aggoutputs = torch.zeros(1, 25, 1024).to(self.device)
             for inputs in all_inputs:
                 with torch.no_grad():
