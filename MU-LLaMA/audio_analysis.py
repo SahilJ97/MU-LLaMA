@@ -145,7 +145,8 @@ def multimodal_generate(
     return text_output
 
 for input_clip, out_file in zip(args.input_clips, args.output_files):
-    output_data = {"input_file": str(input_clip)}
+    input_clip = str(input_clip)
+    output_data = {"input_file": input_clip}
     for prompt, prompt_type in prompts:
         output_text = multimodal_generate(input_clip, 1, prompt, 100, 20.0, 0.0, 256, 0.6, 0.8)
         output_data[prompt_type] = {
