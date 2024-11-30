@@ -81,5 +81,5 @@ def multimodal_generate(
 output = multimodal_generate(args.audio_path, 1, args.question, 100, 20.0, 0.0, 256, 0.6, 0.8)
 print()
 print(f"Audio File: {args.audio_path}")
-print(f"Q: {args.question}")
-print(f"A: {output}")
+print(f"QUESTION: {args.question}")
+print(f"MODEL ANSWER: {output}")
