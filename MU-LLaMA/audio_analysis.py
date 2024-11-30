@@ -97,18 +97,19 @@ if args.from_video:
 
 general_prompt = ".\n".join([
     first_sentence,
-    "The audio may contain any types of content: music, dialogue, narration, or other sounds",
+    "It may contain any types of content: music, dialogue, narration, or other sounds",
     "Start with descriptive, surface-level observations about what's happening in the clip",
-    "Then delve into deeper aspects, such as artistic styles, underlying sentiments, and themes",
-    "Avoid making guesses about intentions or meaning, but do provide claims and interpretations that are well-supported by observed details",
+    "Then delve into deeper aspects: artistic styles, underlying sentiments, themes, etc.",
+    "Avoid inaccuracies and making guesses about intentions or meaning, but do provide claims and interpretations that are well-supported by observed details",
 ])
 
 role_prompt = ".\n".join([
     first_sentence,
-    "The audio may contain any types of content: music, dialogue, narration, or other sounds",
+    "It may contain any types of content: music, dialogue, narration, or other sounds",
     f"Focus exclusively on contributions from the following role(s): {', '.join(args.role)}",
-    "Your observations should cover all notable styles, techniques, and creative decisions that fall under the above role(s)",
-    "Avoid making guesses about intentions or meaning, but do provide claims and interpretations that are well-supported by observed details",
+        "Use the appropriate technical terms and language; your response should befit a creative professional",
+    "Your observations should cover all notable styles, specific techniques, and creative decisions that fall under the above role(s)",
+    "Avoid inaccuracies and making guesses about intentions or meaning, but do provide claims and interpretations that are well-supported by observed details",
 ])
 
 prompts = []
