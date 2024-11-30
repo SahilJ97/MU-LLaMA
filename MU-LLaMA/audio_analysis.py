@@ -66,7 +66,7 @@ parser.add_argument(
 
 parser.add_argument(
     '--analysis-types',
-    type=parse_comma_separated_paths,
+    type=lambda x: [t.strip() for t in x.split(',')],
     required=True,
     help='Comma-separated list of analysis types (recognized types: general, role)'
 )
@@ -107,7 +107,7 @@ role_prompt = ".\n".join([
     first_sentence,
     "It may contain any types of content: music, dialogue, narration, or other sounds",
     f"Focus exclusively on contributions from the following role(s): {', '.join(args.role)}",
-        "Use the appropriate technical terms and language; your response should befit a creative professional",
+    "Use the appropriate technical terms and language; your response should befit a creative professional",
     "Your observations should cover all notable styles, specific techniques, and creative decisions that fall under the above role(s)",
     "Avoid inaccuracies and making guesses about intentions or meaning, but do provide claims and interpretations that are well-supported by observed details",
 ])
