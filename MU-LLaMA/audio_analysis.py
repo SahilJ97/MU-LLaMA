@@ -113,9 +113,9 @@ role_prompt = ".\n".join([
 
 prompts = []
 if "general" in args.analysis_types:
-    prompts.append(general_prompt)
+    prompts.append((general_prompt, "general"))
 if "role" in args.analysis_types:
-    prompts.append(role_prompt)
+    prompts.append((role_prompt, "role"))
 
 model = llama.load(MODEL_PATH, LLAMA_DIR, mert_path=MERT_PATH, knn=True, knn_dir=KNN_DIR, llama_type=LLAMA_TYPE)
 with torch.cuda.amp.autocast():
@@ -136,17 +136,16 @@ def multimodal_generate(
     inputs = {}
     audio = load_and_transform_audio_data([audio_path])
     inputs['Audio'] = [audio, audio_weight]
-    prompts = [llama.format_prompt(prompt)]
-    prompts = [model.tokenizer.encode(x, bos=True, eos=False) for x in prompts]
+    encoded_prompts = [model.tokenizer.encode(prompt, bos=True, eos=False)]
     with torch.cuda.amp.autocast():
-        results = model.generate(inputs, prompts, max_gen_len=max_gen_len, temperature=gen_t, top_p=top_p,
+        results = model.generate(inputs, encoded_prompts, max_gen_len=max_gen_len, temperature=gen_t, top_p=top_p,
                                      cache_size=cache_size, cache_t=cache_t, cache_weight=cache_weight)
     text_output = results[0].strip()
     return text_output
 
 for input_clip, out_file in zip(args.input_clips, args.output_files):
-    output_data = {}
-    for prompt in prompts:
+    output_data = {"input_file": input_clip}
+    for prompt, prompt_type in prompts:
         output_text = multimodal_generate(input_clip, 1, prompt, 100, 20.0, 0.0, 256, 0.6, 0.8)
         output_data[prompt_type] = {
                 "prompt": prompt,
