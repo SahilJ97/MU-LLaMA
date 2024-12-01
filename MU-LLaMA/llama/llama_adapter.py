@@ -200,6 +200,7 @@ class LLaMA_adapter(nn.Module):
             for inputs in all_inputs:
                 with torch.no_grad():
                     outputs = self.mert_model(**inputs, output_hidden_states=True)
+                    print("MERT output shapes:", [h.shape for h in outputs.hidden_states])
                 all_layer_hidden_states = torch.stack(outputs.hidden_states).squeeze()
                 sub_x = all_layer_hidden_states.mean(-2).unsqueeze(0)
                 aggoutputs += sub_x
@@ -258,6 +259,8 @@ class LLaMA_adapter(nn.Module):
     @torch.inference_mode()
     def forward_inference(self, audio_feats, tokens, start_pos: int):
         _bsz, seqlen = tokens.shape
+        print("tokens seqlen:", seqlen)
+        print("audio feats shape:", audio_feats.shape)
         h = self.llama.tok_embeddings(tokens)
         freqs_cis = self.llama.freqs_cis.to(h.device)
         freqs_cis = freqs_cis[start_pos:start_pos + seqlen]
