@@ -149,11 +149,12 @@ for input_clip, out_file in zip(args.input_clips, args.output_files):
     input_clip = str(input_clip)
     output_data = {"input_file": input_clip}
     for prompt, prompt_type in prompts:
+        prompt = "Describe this audio:"  # temp!
         output_text = multimodal_generate(input_clip, 1, prompt, 100, 20.0, 0.0, 256, 0.6, 0.8)
         output_data[prompt_type] = {
-                "prompt": prompt,
-                "output": output_text,
-            }
+            "prompt": prompt,
+            "output": output_text,
+        }
         if prompt_type == "role":
             output_data[prompt_type]["roles"] = args.role
     
