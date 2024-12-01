@@ -341,11 +341,14 @@ class LLaMA_adapter(nn.Module):
         max_prompt_size = max([len(t) for t in prompts])
 
         total_len = min(params.max_seq_len, max_gen_len + max_prompt_size)
+        print("total_len in LLaMA_adapter.generat():", total_len)
 
         tokens = torch.full((bsz, total_len), self.tokenizer.pad_id).cuda().long()
 
         for k, t in enumerate(prompts):
             tokens[k, : len(t)] = torch.tensor(t).cuda().long()
+
+        print("tokens tensor after adding prompts:", tokens.shape)
         input_text_mask = tokens != self.tokenizer.pad_id
         start_pos = min_prompt_size
         prev_pos = 0
