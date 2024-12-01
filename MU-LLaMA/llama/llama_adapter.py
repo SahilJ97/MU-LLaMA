@@ -65,13 +65,13 @@ class LLaMA_adapter(nn.Module):
         with open(os.path.join(llama_ckpt_dir, "params.json"), "r") as f:
             params = json.loads(f.read())
         bias_lora = phase == "finetune"
-        #model_args: ModelArgs = ModelArgs(
-        #    max_seq_len=8192, max_batch_size=1, w_bias=bias_lora, w_lora=bias_lora,
-        #    **params)  # max_batch_size only affects inference
-        # reducing max_seq_len; hopefully this is okay? Or does this only affect output text?
         model_args: ModelArgs = ModelArgs(
-                max_seq_len=1024, max_batch_size=1, w_bias=bias_lora, w_lora=bias_lora,
-                **params)
+            max_seq_len=8192, max_batch_size=1, w_bias=bias_lora, w_lora=bias_lora,
+            **params)  # max_batch_size only affects inference
+        # reducing max_seq_len; hopefully this is okay? Or does this only affect output text?
+        #model_args: ModelArgs = ModelArgs(
+        #        max_seq_len=1024, max_batch_size=1, w_bias=bias_lora, w_lora=bias_lora,
+        #        **params)
         print(f"model args: {model_args}")
         model_args.vocab_size = self.tokenizer.n_words
         if torch.cuda.is_available():
