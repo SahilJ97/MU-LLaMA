@@ -93,7 +93,7 @@ validate_args(
 )
 
 first_sentence = "Analyze this audio in detail"
-"""if args.from_video:
+if args.from_video:
     first_sentence = "This audio was extracted from a video. Analyze it in detail"
 
 general_prompt = ".\n".join([
@@ -111,8 +111,7 @@ role_prompt = ".\n".join([
     #"Use the appropriate technical terms and language; your response should befit a creative professional",
     "Your observations should cover all notable styles, specific techniques, and creative decisions that fall under the above role(s)",
     #"Avoid inaccuracies and making guesses about intentions or meaning, but do provide claims and interpretations that are well-supported by observed details",
-])"""
-general_prompt = ""
+])
 
 prompts = []
 if "general" in args.analysis_types:
