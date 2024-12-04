@@ -195,12 +195,10 @@ class LLaMA_adapter(nn.Module):
                                               sampling_rate=self.mert_processor.sampling_rate,
                                               return_tensors="pt").to(self.device) for ix in
                           range(0, len(sub_x) // (self.mert_processor.sampling_rate * 60) + 1, 60)]
-            print("MERT input values:", [t['input_values'].shape for t in all_inputs])
             aggoutputs = torch.zeros(1, 25, 1024).to(self.device)
             for inputs in all_inputs:
                 with torch.no_grad():
                     outputs = self.mert_model(**inputs, output_hidden_states=True)
-                    print("MERT output shapes:", [h.shape for h in outputs.hidden_states])
                 all_layer_hidden_states = torch.stack(outputs.hidden_states).squeeze()
                 sub_x = all_layer_hidden_states.mean(-2).unsqueeze(0)
                 aggoutputs += sub_x
@@ -225,14 +223,12 @@ class LLaMA_adapter(nn.Module):
             print("Performing KNN...")
             audio_feats_ori = audio_feats
             sims, indices = self.index.search(audio_feats.cpu(), int(cache_size))
-            print("Finished searching index.")
             B = sims.shape[0]
             prototypes = [self.index.reconstruct(x) for x in indices.reshape(-1, ).tolist()]
             prototypes = np.vstack(prototypes).reshape(B, int(cache_size), -1)  # [N, top_k, 1024]
             sims = torch.tensor(sims, device=device)
             prototypes = torch.tensor(prototypes, device=device)
 
-            print("Doing some computations on audio_feats...")
             sims = (sims * cache_t).softmax(dim=-1)
             audio_feats = sims @ prototypes
             audio_feats = audio_feats / audio_feats.norm(dim=-1, keepdim=True)
@@ -259,8 +255,6 @@ class LLaMA_adapter(nn.Module):
     @torch.inference_mode()
     def forward_inference(self, audio_feats, tokens, start_pos: int):
         _bsz, seqlen = tokens.shape
-        print("tokens seqlen:", seqlen)
-        print("audio feats shape:", audio_feats.shape)
         h = self.llama.tok_embeddings(tokens)
         freqs_cis = self.llama.freqs_cis.to(h.device)
         freqs_cis = freqs_cis[start_pos:start_pos + seqlen]
@@ -344,14 +338,12 @@ class LLaMA_adapter(nn.Module):
         max_prompt_size = max([len(t) for t in prompts])
 
         total_len = min(params.max_seq_len, max_gen_len + max_prompt_size)
-        print("total_len in LLaMA_adapter.generat():", total_len)
 
         tokens = torch.full((bsz, total_len), self.tokenizer.pad_id).cuda().long()
 
         for k, t in enumerate(prompts):
             tokens[k, : len(t)] = torch.tensor(t).cuda().long()
 
-        print("tokens tensor after adding prompts:", tokens.shape)
         input_text_mask = tokens != self.tokenizer.pad_id
         start_pos = min_prompt_size
         prev_pos = 0

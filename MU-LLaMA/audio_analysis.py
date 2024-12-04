@@ -119,6 +119,7 @@ if "general" in args.analysis_types:
 if "role" in args.analysis_types:
     prompts.append((role_prompt, "role"))
 
+print("Loading model...")
 model = llama.load(MODEL_PATH, LLAMA_DIR, mert_path=MERT_PATH, knn=True, knn_dir=KNN_DIR, llama_type=LLAMA_TYPE)
 with torch.cuda.amp.autocast():
     model.eval()
@@ -148,9 +149,10 @@ def multimodal_generate(
 
 for input_clip, out_file in zip(args.input_clips, args.output_files):
     input_clip = str(input_clip)
+    print("Processing audio clip:", input_clip)
     output_data = {"input_file": input_clip}
     for prompt, prompt_type in prompts:
-        output_text = multimodal_generate(input_clip, 1, prompt, 100, 20.0, 0.0, 1000, 0.6, 0.8)
+        output_text = multimodal_generate(input_clip, 1, prompt, 100, 20.0, 0.0, 750, 0.6, 0.8)
         output_data[prompt_type] = {
             "prompt": prompt,
             "output": output_text,
