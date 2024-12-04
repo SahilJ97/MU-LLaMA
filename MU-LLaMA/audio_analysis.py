@@ -139,8 +139,8 @@ def multimodal_generate(
     inputs = {}
     audio = load_and_transform_audio_data([audio_path])
     inputs['Audio'] = [audio, audio_weight]
-    encoded_prompts = [llama.format_prompt(prompt)]
-    encoded_prompts = [model.tokenizer.encode(encoded_prompts, bos=True, eos=False)]
+    formatted_prompt = llama.format_prompt(prompt)
+    encoded_prompts = [model.tokenizer.encode(formatted_prompt, bos=True, eos=False)]
     with torch.cuda.amp.autocast():
         results = model.generate(inputs, encoded_prompts, max_gen_len=max_gen_len, temperature=gen_t, top_p=top_p,
                                      cache_size=cache_size, cache_t=cache_t, cache_weight=cache_weight)
