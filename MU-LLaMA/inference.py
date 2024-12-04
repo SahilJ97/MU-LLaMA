@@ -18,7 +18,7 @@ parser.add_argument(
     help="Type of llama original weight",
 )
 parser.add_argument(
-    "--llama_dir", default="/path/to/llama", type=str,
+    "--llama_dir", required=True, type=str,
     help="Path to LLaMA pretrained checkpoint",
 )
 parser.add_argument(
@@ -44,12 +44,9 @@ args = parser.parse_args()
 print("Value of PYTORCH_CUDA_ALLOC_CONF is", os.getenv('PYTORCH_CUDA_ALLOC_CONF'))
 
 
-print("Memory before load:", torch.cuda.memory_allocated()/1e9, "GB")
 model = llama.load(args.model, args.llama_dir, mert_path=args.mert_path, knn=True, knn_dir=args.knn_dir, llama_type=args.llama_type)
-print("Memory after load:", torch.cuda.memory_allocated()/1e9, "GB")
 with torch.cuda.amp.autocast():
     model.eval()
-    print("Memory after eval:", torch.cuda.memory_allocated()/1e9, "GB")
 torch.cuda.empty_cache()
 
 def multimodal_generate(

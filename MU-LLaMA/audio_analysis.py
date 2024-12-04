@@ -93,10 +93,10 @@ validate_args(
 )
 
 first_sentence = "Analyze this audio in detail"
-if args.from_video:
+"""if args.from_video:
     first_sentence = "This audio was extracted from a video. Analyze it in detail"
 
-general_prompt = ". ".join([
+general_prompt = ".\n".join([
     first_sentence,
     #"It may contain any types of content: music, dialogue, narration, or other sounds",
     "Start with descriptive, surface-level observations about what's happening in the clip",
@@ -111,7 +111,8 @@ role_prompt = ".\n".join([
     #"Use the appropriate technical terms and language; your response should befit a creative professional",
     "Your observations should cover all notable styles, specific techniques, and creative decisions that fall under the above role(s)",
     #"Avoid inaccuracies and making guesses about intentions or meaning, but do provide claims and interpretations that are well-supported by observed details",
-])
+])"""
+general_prompt = ""
 
 prompts = []
 if "general" in args.analysis_types:
@@ -138,9 +139,9 @@ def multimodal_generate(
 ):
     inputs = {}
     audio = load_and_transform_audio_data([audio_path])
-    print("Audio shape:", audio.shape)
     inputs['Audio'] = [audio, audio_weight]
-    encoded_prompts = [model.tokenizer.encode(prompt, bos=True, eos=False)]
+    encoded_prompts = [llama.format_prompt(prompt)]
+    encoded_prompts = [model.tokenizer.encode(encoded_prompts, bos=True, eos=False)]
     with torch.cuda.amp.autocast():
         results = model.generate(inputs, encoded_prompts, max_gen_len=max_gen_len, temperature=gen_t, top_p=top_p,
                                      cache_size=cache_size, cache_t=cache_t, cache_weight=cache_weight)
