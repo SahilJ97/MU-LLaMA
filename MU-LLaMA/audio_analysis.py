@@ -96,7 +96,7 @@ first_sentence = "Analyze this audio in detail"
 if args.from_video:
     first_sentence = "This audio was extracted from a video. Analyze it in detail"
 
-general_prompt = ".\n".join([
+general_prompt = ". ".join([
     first_sentence,
     #"It may contain any types of content: music, dialogue, narration, or other sounds",
     "Start with descriptive, surface-level observations about what's happening in the clip",
