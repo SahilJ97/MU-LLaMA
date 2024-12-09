@@ -1,4 +1,4 @@
-#Usage: python audio_analysis.py --input-clips "$INPUT_AUDIO_CLIPS" \
+#Usage: python audio_analysis_old_script.py --input-clips "$INPUT_AUDIO_CLIPS" \
 #    --output-files "$CLIP_AUDIO_ANALYSIS_FILES" --analysis-types general,role \
 #    $(for role in "${CREATIVE_ROLES[@]}"; do echo "--role $role"; done
 
