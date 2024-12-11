@@ -9,6 +9,7 @@ import glob
 from analyze_audio_file import multimodal_generate
 from supabase import create_client, Client
 from openai import OpenAI
+from flask import jsonify
 
 with tempfile.TemporaryDirectory() as tmpdirname:
      print('Created temporary directory', tmpdirname)
@@ -39,7 +40,7 @@ def require_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.authorization
-        if not auth or access_key != auth.username or secret_key != auth.password:
+        if not auth or ACCESS_KEY != auth.username or SECRET_KEY != auth.password:
             return "Unauthorized", 403
         return f(*args, **kwargs)
     return decorated
@@ -96,7 +97,7 @@ def split_audio(input_file, output_dir):
 
 def transcribe_audio(clip_path):
     with open(clip_path, "rb") as audio_file:
-        transcript = client.audio.transcriptions.create(
+        transcript = open_ai_client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file
         )
