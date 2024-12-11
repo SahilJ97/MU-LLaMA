@@ -48,12 +48,9 @@ def require_auth(f):
 
 def split_audio(input_file, output_dir):
     """
-    Get the duration of an MP3 file and split it into smaller clips.
-
     Parameters:
     input_file (str): Path to the input MP3 file
     output_dir (str): Directory where the output clips will be saved
-    clip_duration_ms (int): Duration of each clip in milliseconds (default: 30 seconds)
 
     Returns:
     tuple: (clip_duration_minutes, number_of_clips_created)
