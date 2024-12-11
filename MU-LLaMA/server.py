@@ -7,6 +7,8 @@ import math
 import tempfile
 import glob
 from analyze_audio_file import multimodal_generate
+from supabase import create_client, Client
+from openai import OpenAI
 
 with tempfile.TemporaryDirectory() as tmpdirname:
      print('Created temporary directory', tmpdirname)
