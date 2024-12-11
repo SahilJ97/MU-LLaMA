@@ -61,6 +61,7 @@ def split_audio(input_file, output_dir):
     # Get the duration in minutes
     total_duration_ms = len(audio)
     total_duration_minutes = total_duration_ms / 60000
+    print(f"Total duration of {input_file}: {total_duration_minutes} minutes")
 
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
@@ -69,6 +70,7 @@ def split_audio(input_file, output_dir):
     clip_duration_minutes = math.ceil(0.73 * math.log(total_duration_minutes) + 0.85)
     clip_duration_ms = clip_duration_minutes * 60000
     num_clips = math.ceil(total_duration_minutes / clip_duration_minutes)
+    print(f"Number of clips: {num_clips}")
 
     # Split the audio into clips
     for i in range(num_clips):
@@ -156,16 +158,10 @@ def hello():
                 "clip_transcription": clip_transcription
             })
 
-        return jsonify({
-            "clip_duration_minutes": clip_duration_minutes,
-            "analysis_data": all_analysis_data
-        })
-
-
-
-
-
-    return "Welcome! You are authenticated.", 200
+    return jsonify({
+        "clip_duration_minutes": clip_duration_minutes,
+        "analysis_data": all_analysis_data
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
