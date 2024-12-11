@@ -41,45 +41,6 @@ RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
 # Set up working directory and clone repositories
 WORKDIR /app
 
-# First clone the main repository
-RUN git clone https://github.com/SahilJ97/MU-LLaMA.git
-
-# Don't clone the checkpoint repository; do this later
-WORKDIR /app/MU-LLaMA/MU-LLaMA
-#RUN git clone https://huggingface.co/mu-llama/MU-LLaMA ckpts
-
-# Copy local files (if any) after cloning
-WORKDIR /app
-COPY . /app/
-
-# Create conda environment
-RUN /opt/conda/bin/conda create -n mu-llama python=3.9 -y && \
-    echo "conda activate mu-llama" >> ~/.bashrc
-
-# Install PyTorch - split into smaller chunks
-RUN /opt/conda/bin/conda run -n mu-llama conda install -y pytorch==2.1.0 torchvision==0.16.0 -c pytorch -c nvidia
-RUN /opt/conda/bin/conda run -n mu-llama conda install -y torchaudio==2.1.0 pytorch-cuda=11.8 -c pytorch -c nvidia
-RUN /opt/conda/bin/conda run -n mu-llama conda install -y 'ffmpeg<5' -c pytorch -c nvidia
-
-# Install Python dependencies with retry mechanism
-RUN for i in {1..3}; do \
-        /opt/conda/bin/conda run -n mu-llama pip install -v \
-            pytorchvideo==0.1.5 \
-            ftfy \
-            timm \
-            einops && break || sleep 15; \
-    done
-
-# Install requirements.txt
-WORKDIR /app/MU-LLaMA
-RUN if [ -f "requirements.txt" ]; then \
-        /opt/conda/bin/conda run -n mu-llama pip install -r requirements.txt; \
-    fi
-
-# Set final working directory
-WORKDIR /app/MU-LLaMA/MU-LLaMA
-
 # Set the default command
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ["/opt/conda/bin/conda", "run", "-n", "mu-llama"]
-CMD ["python"]
