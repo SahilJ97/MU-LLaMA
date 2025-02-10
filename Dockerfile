@@ -25,21 +25,22 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
     rm /tmp/miniconda.sh && \
     /opt/conda/bin/conda clean --all --force-pkgs-dirs -y
 
-# Create new conda environment and install dependencies in one layer
+# Create conda environment and install PyTorch separately
 RUN conda create -n mu-llama python=3.9 -y && \
-    conda run -n mu-llama conda install -y \
-        pytorch==2.5.0 \
-        torchvision==0.20.0 \
-        torchaudio==2.5.0 \
-        pytorch-cuda=11.8 \
-        -c pytorch -c nvidia && \
-    conda run -n mu-llama pip install flash-attn --no-build-isolation && \
+    conda clean --all --force-pkgs-dirs -y
+
+# Install PyTorch and CUDA first
+RUN conda run -n mu-llama conda install -y pytorch==2.5.0 pytorch-cuda=11.8 -c pytorch -c nvidia && \
+    conda clean --all --force-pkgs-dirs -y
+
+# Install vision and audio packages
+RUN conda run -n mu-llama conda install -y torchvision==0.20.0 torchaudio==2.5.0 -c pytorch -c nvidia && \
     conda clean --all --force-pkgs-dirs -y
 
 # Set up working directory and copy application files
 WORKDIR /app
 COPY . .
-RUN conda run -n visual pip install -r requirements.txt
+RUN conda run -n mu-llama pip install -r requirements.txt
 
 # Initialize git-lfs and install checkpoints directory
 RUN git lfs install && \
