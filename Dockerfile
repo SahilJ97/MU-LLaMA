@@ -38,13 +38,17 @@ RUN conda run -n mu-llama conda install -y torchvision==0.20.0 torchaudio==2.5.0
     conda clean --all --force-pkgs-dirs -y
 
 # Set up working directory and copy application files
-WORKDIR /app
-COPY . .
+WORKDIR /app/MU-LLaMA/MU-LLaMA
+COPY . /app/MU-LLaMA
 RUN conda run -n mu-llama pip install -r requirements.txt
 
-# Initialize git-lfs and install checkpoints directory
-RUN git lfs install && \
-    git clone https://huggingface.co/mu-llama/MU-LLaMA MU-LLaMA/ckpts
+# Only install git-lfs at build time, ckpts clone will happen at runtime
+RUN git lfs install
+
+RUN chmod +x /app/entrypoint.sh
+
+# Set the entrypoint to our script
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Set the default command to activate conda environment and launch service
 SHELL ["/bin/bash", "-c"]
