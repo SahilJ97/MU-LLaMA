@@ -49,8 +49,3 @@ RUN chmod +x /app/entrypoint.sh
 
 # Set the entrypoint to our script
 ENTRYPOINT ["/app/entrypoint.sh"]
-
-# Set the default command to activate conda environment and launch service
-SHELL ["/bin/bash", "-c"]
-ENTRYPOINT ["conda", "run", "-n", "mu-llama"]
-CMD ["python", "MU-LLaMA/worker.py"]
