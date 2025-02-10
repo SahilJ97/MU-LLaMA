@@ -1,46 +1,53 @@
 # To build the image: docker build --platform linux/amd64 -t mu-llama:latest .
 
 # Start with NVIDIA CUDA base image
-FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CONDA_DIR=/opt/conda
 ENV PATH=$CONDA_DIR/bin:$PATH
+ENV PYTHONPATH=/app
 
-# Install system dependencies in smaller groups
+# Install system dependencies in a single layer to minimize image size
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends sudo wget curl && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends jq ffmpeg && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends git git-lfs && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+        sudo \
+        wget \
+        curl \
+        jq \
+        ffmpeg \
+        git \
+        git-lfs \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Initialize git-lfs
 RUN git lfs install
 
-# Install Miniconda - with directory cleanup
-RUN rm -rf /opt/conda && \
-    curl -o ~/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-    chmod +x ~/miniconda.sh && \
-    bash ~/miniconda.sh -b -p /opt/conda && \
-    rm ~/miniconda.sh && \
-    /opt/conda/bin/conda clean -afy
+# Install Miniconda with proper cleanup
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/conda && \
+    rm /tmp/miniconda.sh && \
+    /opt/conda/bin/conda clean --all --force-pkgs-dirs -y
 
-# Initialize conda in shell
-RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    find /opt/conda/ -follow -type f -name '*.a' -delete && \
-    find /opt/conda/ -follow -type f -name '*.js.map' -delete
+# Create new conda environment and install dependencies in one layer
+RUN conda create -n mu-llama python=3.9 -y && \
+    conda run -n mu-llama conda install -y \
+        pytorch==2.5.0 \
+        torchvision==0.20.0 \
+        torchaudio==2.5.0 \
+        pytorch-cuda=11.8 \
+        -c pytorch -c nvidia && \
+    conda run -n mu-llama pip install flash-attn --no-build-isolation && \
+    conda clean --all --force-pkgs-dirs -y
 
-# Set up working directory and clone repositories
+# Set up working directory and copy application files
 WORKDIR /app
+COPY . .
+RUN conda run -n visual pip install -r requirements.txt
 
-# Set the default command
+# Set the default command to activate conda environment and launch service
 SHELL ["/bin/bash", "-c"]
-ENTRYPOINT ["/opt/conda/bin/conda", "run", "-n", "mu-llama"]
+ENTRYPOINT ["conda", "run", "-n", "mu-llama"]
+CMD ["python", "MU-LLaMA/worker.py"]
