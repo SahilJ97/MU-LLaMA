@@ -1,5 +1,3 @@
-from flask import Flask, request
-from functools import wraps
 from dotenv import load_dotenv
 import os
 from pydub import AudioSegment
@@ -7,43 +5,35 @@ import math
 import tempfile
 import glob
 from analyze_audio_file import multimodal_generate
-from supabase import create_client, Client
 from openai import OpenAI
-from flask import jsonify
+from . import audio_redis_q
+import logging
+import sys
+from typing import Optional
+import requests
+import time
 
-with tempfile.TemporaryDirectory() as tmpdirname:
-     print('Created temporary directory', tmpdirname)
+# Basic logging setup
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-app = Flask(__name__)
+ML_BACKEND_API_KEY = os.environ.get("ML_BACKEND_API_KEY")
+if not ML_BACKEND_API_KEY:
+    raise ValueError("ML_BACKEND_API_KEY is not set in environment variables")
 
-# Client credentials for verification
-ACCESS_KEY = os.environ.get("ACCESS_KEY")
-SECRET_KEY = os.environ.get("SECRET_KEY")
-
-# Configure Supabase client
-SUPABASE_URL = os.environ.get('SUPABASE_URL')
-SUPABASE_SERVICE_ROLE_KEY = os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-
-# Configure OpenAI client
+logger.info("Configuring OpenAI client...")
 OPEN_AI_ORG = os.environ.get("OPEN_AI_ORG")
 OPEN_AI_KEY = os.environ.get("OPEN_AI_KEY")
 open_ai_client = OpenAI(
     organization=OPEN_AI_ORG,
     api_key=OPEN_AI_KEY
 )
-
-
-def require_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or ACCESS_KEY != auth.username or SECRET_KEY != auth.password:
-            return "Unauthorized", 403
-        return f(*args, **kwargs)
-    return decorated
 
 
 def split_audio(input_file, output_dir):
@@ -100,33 +90,43 @@ def transcribe_audio(clip_path):
         )
     return transcript.text
 
-@app.route('/analyze-audio')
-@require_auth
-def hello():
-    if not request.is_json:
-        return jsonify({"error": "Content-Type must be application/json"}), 415
+def download_file(
+        download_url: Optional[str],
+        tmp_dir_name: str,
+        filename: str
+):
+    download_path = os.path.join(tmp_dir_name, filename)
 
-    data = request.get_json()
-    storage_bucket = data.get('storage_bucket')
-    storage_relative_path = data.get('storage_relative_path')
-    prompts = data.get('prompts')
+    headers = {'X-API-Key': ML_BACKEND_API_KEY}
+    response = requests.get(download_url, headers=headers, stream=True)
+    response.raise_for_status()  # Raise an exception for bad status codes
 
-    if not all([storage_bucket, storage_relative_path, prompts]):
-        return jsonify({"error": "storage_bucket, storage_relative_path, and prompts must all be specified"}), 400
+    with open(download_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
+
+    return download_path
+
+def analyze_audio(job_data: dict):
+    download_url = job_data.get('download_url')
+    prompts = job_data.get('prompts')
+    
+    if not prompts:
+        raise ValueError("Data for job has no value for 'prompts'")
 
     # Convert prompts to a list of (prompt_type, prompt) tuples
     prompts = list(prompts.items())
 
     with tempfile.TemporaryDirectory() as tmp_dir_name:
-        print('Created temporary directory', tmp_dir_name)
+        logger.info('Created temporary directory', tmp_dir_name)
+
+        # Download file
+        # TODO: handle mp3 case AND other cases! What does vimeo do? intermediate URL has no extension.
+        filename = "video.mp4"
+        download_path = download_file(download_url, tmp_dir_name, filename)
 
         # Download the audio file to ./audio.mp3
         download_path = os.path.join(tmp_dir_name, "audio.mp3")
-        with open(download_path, "wb+") as f:
-            response = supabase.storage.from_(storage_bucket).download(
-                storage_relative_path
-            )
-            f.write(response)
 
         # Split the audio into clips
         clip_duration_minutes, num_clips = split_audio(download_path, tmp_dir_name)
@@ -158,10 +158,28 @@ def hello():
                 "clip_transcription": clip_transcription
             })
 
-    return jsonify({
+    return {
         "clip_duration_minutes": clip_duration_minutes,
         "analysis_data": all_analysis_data
-    })
+    }
 
-if __name__ == '__main__':
-    app.run(debug=True)
+def main_loop():
+    logger.info("Initializing worker...")
+    while True:
+        # Check the audio task queue
+        audio_job = audio_redis_q.get_next_job()
+        if audio_job is not None:
+            logger.info(f"Processing audio job {audio_job.id}")
+            try:
+                result = analyze_audio(audio_job.data)
+                audio_redis_q.complete_job(audio_job.id, result)
+            except Exception as e:
+                audio_redis_q.report_job_failure(audio_job.id, error=str(e))
+                raise e
+        else:
+            logger.info("No jobs found; sleeping for 90s...")
+            time.sleep(90)
+
+
+if __name__ == "__main__":
+    main_loop()  # Any unhandled exception will crash the worker
