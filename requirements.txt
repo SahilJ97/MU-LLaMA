@@ -1,4 +1,4 @@
-./wheels/redis_layer-0.1.0-py3-none-any.whl
+/app/MU-LLaMA/wheels/redis_layer-0.1.0-py3-none-any.whl
 redis==5.2.1
 fairscale==0.4.13
 sentencepiece==0.1.99
