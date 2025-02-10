@@ -1,6 +1,3 @@
-# To build the image: docker build --platform linux/amd64 -t mu-llama:latest .
-
-# Start with NVIDIA CUDA base image
 FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 
 # Set environment variables
@@ -21,9 +18,6 @@ RUN apt-get update && \
         git-lfs \
         build-essential \
     && rm -rf /var/lib/apt/lists/*
-
-# Initialize git-lfs
-RUN git lfs install
 
 # Install Miniconda with proper cleanup
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
@@ -46,6 +40,10 @@ RUN conda create -n mu-llama python=3.9 -y && \
 WORKDIR /app
 COPY . .
 RUN conda run -n visual pip install -r requirements.txt
+
+# Initialize git-lfs and install checkpoints directory
+RUN git lfs install && \
+    git clone https://huggingface.co/mu-llama/MU-LLaMA MU-LLaMA/ckpts
 
 # Set the default command to activate conda environment and launch service
 SHELL ["/bin/bash", "-c"]
