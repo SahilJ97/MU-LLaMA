@@ -3,7 +3,7 @@ name: Docker Build
 on:
   push:
     branches:
-      - master
+      - LLaMA-2
     paths-ignore:
       - '**.md'
       - '.gitignore'
