@@ -30,11 +30,11 @@ RUN conda create -n mu-llama python=3.9 -y && \
     conda clean --all --force-pkgs-dirs -y
 
 # Install PyTorch and CUDA first
-RUN conda run -n mu-llama conda install -y pytorch==2.5.0 pytorch-cuda=11.8 -c pytorch -c nvidia && \
+RUN conda run -n mu-llama conda install -y pytorch==2.0.1 pytorch-cuda=11.8 -c pytorch -c nvidia && \
     conda clean --all --force-pkgs-dirs -y
 
 # Install vision and audio packages
-RUN conda run -n mu-llama conda install -y torchvision==0.20.0 torchaudio==2.5.1 -c pytorch -c nvidia && \
+RUN conda run -n mu-llama conda install -y torchvision==0.15.2 torchaudio==2.0.2 -c pytorch -c nvidia && \
     conda clean --all --force-pkgs-dirs -y
 
 # Set up working directory and copy application files
