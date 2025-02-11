@@ -6,7 +6,7 @@ import tempfile
 import glob
 from analyze_audio_file import multimodal_generate
 from openai import OpenAI
-from . import audio_redis_q
+from MU_LLaMA.MU_LLaMA import audio_redis_q
 import logging
 import sys
 from typing import Optional
