@@ -121,12 +121,18 @@ def analyze_audio(job_data: dict):
         logger.info('Created temporary directory', tmp_dir_name)
 
         # Download file
-        # TODO: handle mp3 case AND other cases! What does vimeo do? intermediate URL has no extension.
-        filename = "video.mp4"
+        if download_url.lower().endswith(".mp3"):
+            filename = "audio.mp3"
+        else:
+            filename = "video.mp4"
         download_path = download_file(download_url, tmp_dir_name, filename)
 
-        # Download the audio file to ./audio.mp3
-        download_path = os.path.join(tmp_dir_name, "audio.mp3")
+        # Convert mp4 to mp3 if needed
+        if filename == "video.mp4":
+            audio = AudioSegment.from_file(download_path, format="mp4")
+            mp3_path = os.path.join(tmp_dir_name, "audio.mp3")
+            audio.export(mp3_path, format="mp3")
+            download_path = mp3_path
 
         # Split the audio into clips
         clip_duration_minutes, num_clips = split_audio(download_path, tmp_dir_name)
