@@ -4,6 +4,9 @@ from pydub import AudioSegment
 import math
 import tempfile
 import glob
+
+from redis_layer.queue import log_message
+
 from analyze_audio_file import multimodal_generate
 from openai import OpenAI
 import logging
@@ -130,9 +133,6 @@ def analyze_audio(job_data: dict):
     if not prompts:
         raise ValueError("Data for job has no value for 'prompts'")
 
-    # Convert prompts to a list of (prompt_type, prompt) tuples
-    prompts = list(prompts.items())
-
     with tempfile.TemporaryDirectory() as tmp_dir_name:
         logger.info('Created temporary directory', tmp_dir_name)
 
@@ -157,24 +157,25 @@ def analyze_audio(job_data: dict):
         all_analysis_data = []
         ordered_clips = sorted(glob.glob(f"{tmp_dir_name}/clip_*.mp3"))
         for clip_path in ordered_clips:
-            clip_transcription = transcribe_audio(clip_path)
-            clip_analyses = {}
-            outputs = multimodal_generate(
-                clip_path,
-                1,
-                prompt,
-                100,
-                20.0,
-                0.0,
-                512,
-                0.6,
-                0.8
-            )
-            for (prompt_type, prompt), output in zip(prompts, outputs):
-                clip_analyses[prompt_type] = {
+            for prompt in prompts:
+                clip_transcription = transcribe_audio(clip_path)
+                clip_analyses = []
+                output = multimodal_generate(
+                    clip_path,
+                    1,
+                    prompt,
+                    100,
+                    20.0,
+                    0.0,
+                    512,
+                    0.6,
+                    0.8
+                )
+                logger.info(f"Generated output for prompt {prompt}: {output}")
+                clip_analyses.append({
                     "prompt": prompt,
                     "output": output
-                }
+                })
             all_analysis_data.append({
                 "clip_analyses": clip_analyses,
                 "clip_transcription": clip_transcription
