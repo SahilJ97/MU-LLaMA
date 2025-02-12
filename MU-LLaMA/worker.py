@@ -6,12 +6,13 @@ import tempfile
 import glob
 from analyze_audio_file import multimodal_generate
 from openai import OpenAI
-from MU_LLaMA.MU_LLaMA import audio_redis_q
 import logging
 import sys
 from typing import Optional
 import requests
 import time
+import redis
+from redis_layer import RedisQueue
 
 # Basic logging setup
 logging.basicConfig(
@@ -22,6 +23,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+# Configure Redis client and queues
+ENVIRONMENT = os.environ.get('ENVIRONMENT')
+REDIS_HOST = os.environ.get('REDIS_HOST')
+REDIS_PORT = os.environ.get('REDIS_PORT')
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD')
+redis_client = redis.Redis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    password=REDIS_PASSWORD,
+    decode_responses=True,  # Automatically decode responses to strings instead of bytes
+    socket_timeout=5,  # Add timeout to prevent hanging
+    retry_on_timeout=True,  # Automatically retry on timeout
+)
+audio_redis_q = RedisQueue(redis_client, f'{ENVIRONMENT}_audio')
 
 ML_BACKEND_API_KEY = os.environ.get("ML_BACKEND_API_KEY")
 if not ML_BACKEND_API_KEY:
