@@ -129,12 +129,13 @@ def download_file(
 def analyze_audio(job_data: dict):
     download_url = job_data.get('download_url')
     prompts = job_data.get('prompts')
+    logger.info(f"Analyzing audio with data {job_data}")
     
     if not prompts:
         raise ValueError("Data for job has no value for 'prompts'")
 
     with tempfile.TemporaryDirectory() as tmp_dir_name:
-        logger.info('Created temporary directory', tmp_dir_name)
+        logger.info(f'Created temporary directory {tmp_dir_name}')
 
         # Download file
         if download_url.lower().endswith(".mp3"):
