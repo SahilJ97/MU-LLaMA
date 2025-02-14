@@ -4,9 +4,6 @@ from pydub import AudioSegment
 import math
 import tempfile
 import glob
-
-from redis_layer.queue import log_message
-
 from analyze_audio_file import multimodal_generate
 from openai import OpenAI
 import logging

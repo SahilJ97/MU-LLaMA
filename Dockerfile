@@ -15,6 +15,8 @@ RUN apt-get update && \
         jq \
         ffmpeg \
         git \
+        openssh-server \
+        tmux \
         git-lfs \
         build-essential \
     && rm -rf /var/lib/apt/lists/*
@@ -48,4 +50,7 @@ RUN git lfs install
 RUN chmod +x /app/MU-LLaMA/entrypoint.sh
 
 # Set the entrypoint to our script
-ENTRYPOINT ["/app/MU-LLaMA/entrypoint.sh"]
+#ENTRYPOINT ["/app/MU-LLaMA/entrypoint.sh"]
+CMD bash -c 'mkdir -p ~/.ssh && cd $_ && chmod 700 ~/.ssh && echo "$PUBLIC_KEY" >> authorized_keys && chmod 700 authorized_keys && service ssh start && sleep infinity'
+
+# After SSHing into the container, cd into /app/MU-LLaMA/MU-LLaMA and run `clone https://huggingface.co/mu-llama/MU-LLaMA ckpts`
