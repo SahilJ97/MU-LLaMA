@@ -170,6 +170,13 @@ def analyze_audio(job_data: dict):
                     0.8
                 )
                 logger.info(f"Generated output for prompt {prompt}: {output}")
+                if isinstance(output, list) and isinstance(output[0], str):
+                    output = " ".join(output)
+                elif isinstance(output, str):
+                    pass
+                else:
+                    logger.info(f"Uh oh...output for prompt {prompt} is not a string or list of strings!")
+                    pass
                 clip_analyses.append({
                     "prompt": prompt,
                     "output": output

@@ -220,7 +220,6 @@ class LLaMA_adapter(nn.Module):
         device = audio_feats.device
 
         if self.knn:
-            print("Performing KNN...")
             audio_feats_ori = audio_feats
             sims, indices = self.index.search(audio_feats.cpu(), int(cache_size))
             B = sims.shape[0]
@@ -235,7 +234,6 @@ class LLaMA_adapter(nn.Module):
 
             audio_feats = (1 - cache_weight) * audio_feats_ori + cache_weight * audio_feats
             audio_feats = audio_feats / audio_feats.norm(dim=-1, keepdim=True)
-            print("Done with all KNN computations.")
 
         audio_feats = audio_feats.unsqueeze(1)  # B, 1, D
         audio_feats = self.mu_mert_proj(audio_feats)
