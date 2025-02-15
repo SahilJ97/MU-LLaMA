@@ -154,8 +154,9 @@ def analyze_audio(job_data: dict):
         all_analysis_data = []
         ordered_clips = sorted(glob.glob(f"{tmp_dir_name}/clip_*.mp3"))
         for clip_path in ordered_clips:
+            logger.info(f"Processing clip {clip_path}")
+            clip_transcription = transcribe_audio(clip_path)
             for prompt in prompts:
-                clip_transcription = transcribe_audio(clip_path)
                 clip_analyses = []
                 output = multimodal_generate(
                     clip_path,
