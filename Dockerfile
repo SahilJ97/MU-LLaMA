@@ -50,7 +50,7 @@ RUN git lfs install
 RUN chmod +x /app/MU-LLaMA/entrypoint.sh
 
 # Set the entrypoint to our script
-#ENTRYPOINT ["/app/MU-LLaMA/entrypoint.sh"]
-CMD bash -c 'mkdir -p ~/.ssh && cd $_ && chmod 700 ~/.ssh && echo "$PUBLIC_KEY" >> authorized_keys && chmod 700 authorized_keys && service ssh start && sleep infinity'
+ENTRYPOINT ["/app/MU-LLaMA/entrypoint.sh"]
+#CMD bash -c 'mkdir -p ~/.ssh && cd $_ && chmod 700 ~/.ssh && echo "$PUBLIC_KEY" >> authorized_keys && chmod 700 authorized_keys && service ssh start && sleep infinity'
 
 # After SSHing into the container, run `git clone https://huggingface.co/mu-llama/MU-LLaMA ckpts`
