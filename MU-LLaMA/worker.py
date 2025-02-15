@@ -52,7 +52,7 @@ open_ai_client = OpenAI(
 )
 
 
-def split_audio(input_file, output_dir):
+def split_audio(input_file, output_dir, clip_duration_minutes=1):
     """
     Parameters:
     input_file (str): Path to the input MP3 file
@@ -63,22 +63,21 @@ def split_audio(input_file, output_dir):
     """
     # Load the audio file
     audio = AudioSegment.from_mp3(input_file)
-
-    # Get the duration in minutes
     total_duration_ms = len(audio)
     total_duration_minutes = total_duration_ms / 60000
-    print(f"Total duration of {input_file}: {total_duration_minutes} minutes")
+
+    # If clip_duration_minutes isn't provided, calculate it based on the total duration
+    if clip_duration_minutes is None:
+        print(f"Total duration of {input_file}: {total_duration_minutes} minutes")
+        clip_duration_minutes = math.ceil(0.73 * math.log(total_duration_minutes) + 0.85)
 
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
-    # Calculate number of clips
-    clip_duration_minutes = math.ceil(0.73 * math.log(total_duration_minutes) + 0.85)
-    clip_duration_ms = clip_duration_minutes * 60000
-    num_clips = math.ceil(total_duration_minutes / clip_duration_minutes)
-    print(f"Number of clips: {num_clips}")
-
     # Split the audio into clips
+    num_clips = math.ceil(total_duration_minutes / clip_duration_minutes)
+    clip_duration_ms = clip_duration_minutes * 60000
+    print(f"Number of clips: {num_clips}")
     for i in range(num_clips):
         start_ms = i * clip_duration_ms
         end_ms = min((i + 1) * clip_duration_ms, total_duration_ms)
@@ -188,7 +187,7 @@ def analyze_audio(job_data: dict):
 
     return {
         "clip_duration_minutes": clip_duration_minutes,
-        "analysis_data": all_analysis_data
+        "analysis_data": all_analysis_data,
     }
 
 def main_loop():
