@@ -13,6 +13,9 @@ import requests
 import time
 import redis
 from redis_layer import RedisQueue
+from speech_segment_extractor import AudioSegmenter
+
+segmenter = AudioSegmenter()
 
 # Basic logging setup
 logging.basicConfig(
@@ -154,8 +157,15 @@ def analyze_audio(job_data: dict):
         all_analysis_data = []
         ordered_clips = sorted(glob.glob(f"{tmp_dir_name}/clip_*.mp3"))
         for clip_path in ordered_clips:
+
             logger.info(f"Processing clip {clip_path}")
-            clip_transcription = transcribe_audio(clip_path)
+            # Transcribe audio
+            speech_only_clip_path = clip_path.replace(".mp3", "_linguistic_only.mp3")
+            segmenter.process_audio_file(clip_path, speech_only_clip_path)
+            # speech_only_hash = hash_file(speech_only_clip_path)  # TODO: locally cache transcriptions by clip hash
+            clip_transcription = transcribe_audio(speech_only_clip_path)
+            logger.info(f"Obtained transcription: {clip_transcription}")
+
             for prompt in prompts:
                 clip_analyses = []
                 output = multimodal_generate(

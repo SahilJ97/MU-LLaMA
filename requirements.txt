@@ -18,3 +18,7 @@ python-dotenv
 pydub
 pytorchvideo
 openai
+librosa
+requests
+soundfile
+scipy
