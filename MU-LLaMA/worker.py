@@ -210,10 +210,18 @@ def main_loop():
             logger.info(f"Processing audio job {audio_job.id}")
             try:
                 result = analyze_audio(audio_job.data)
-                audio_redis_q.complete_job(audio_job.id, result)
             except Exception as e:
                 audio_redis_q.report_job_failure(audio_job.id, error=str(e))
                 raise e
+            completion_attempts = 0
+            while completion_attempts < 3:
+                try:
+                    audio_redis_q.complete_job(audio_job.id, result)
+                    break
+                except Exception as e:
+                    completion_attempts += 1
+                    if completion_attempts == 3:
+                        raise e
         else:
             logger.info("No jobs found; sleeping for 90s...")
             time.sleep(90)
